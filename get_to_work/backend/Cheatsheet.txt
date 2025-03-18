@@ -3,6 +3,7 @@ venv\Scripts\activate
 
 Start backend server:
 uvicorn backend.backend_main:gtw --reload (Ctrl + C to shut it down)
+http://127.0.0.1:8000
 
 PostgreSQL edits:
 Password is gettowork!
