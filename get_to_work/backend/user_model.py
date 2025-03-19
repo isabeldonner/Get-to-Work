@@ -7,3 +7,6 @@ class User(base):
     username = Column(String, unique=True, index=True)  # omit?
     email = Column(String, unique=True, index=True)
     password = Column(String)
+    # LeetCode username
+    # LeetCode password
+    # link to leaderboard object somehow
