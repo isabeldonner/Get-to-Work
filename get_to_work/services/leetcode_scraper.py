@@ -1,39 +1,71 @@
-import selenium.common
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from webdriver_manager.chrome import ChromeDriverManager
-from dotenv import load_dotenv
-import time
-import os
 import leetcode
+import os
+import shutil
+import json
+import base64
+import win32crypt
+from Cryptodome.Cipher import AES
+from sqlalchemy import create_engine, text
+
+def get_encryption_key():
+    """Retrieve Chrome's AES encryption key."""
+    local_state_path = os.path.join(
+        os.getenv("APPDATA"), "..", "Local", "Google", "Chrome", "User Data", "Local State"
+    )
+
+    with open(local_state_path, "r", encoding="utf-8") as file:
+        local_state = json.loads(file.read())
+
+    encrypted_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
+    encrypted_key = encrypted_key[5:]  # Strip the "DPAPI" prefix
+
+    return win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
+
+
+def decrypt_cookie(encrypted_cookie, key):
+    """Decrypt Chrome's AES-encrypted cookies."""
+    try:
+        iv = encrypted_cookie[3:15]
+        encrypted_cookie = encrypted_cookie[15:]
+        cipher = AES.new(key, AES.MODE_GCM, iv)
+        return cipher.decrypt(encrypted_cookie)[:-16].decode()
+    except:
+        return win32crypt.CryptUnprotectData(encrypted_cookie, None, None, None, 0)[1]
+
 
 def get_session_info():
-    leetcode_session = None
-    token = None
+    """Retrieve LEETCODE_SESSION and CSRF token from Chrome's cookies database."""
+    cookies_db_path = os.path.join(
+        os.getenv("APPDATA"), "..", "Local", "Google", "Chrome", "User Data", "Default", "Network", "Cookies"
+    )
 
-    service = Service(ChromeDriverManager().install())
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
-    driver = webdriver.Chrome(service=service, options=options)
+    temp_db = "temp_cookies.db"
+    shutil.copy2(cookies_db_path, temp_db)  # Copy DB to avoid lock issues
 
-    driver.get("https://leetcode.com")
-    time.sleep(5)
+    # Create SQLAlchemy database engine
+    engine = create_engine(f"sqlite:///{temp_db}")
 
-    cookies = driver.get_cookies()
-    print(driver.current_url)
-    for cookie in cookies:
-        print(cookie)
-    driver.quit()
-    for cookie in cookies:
-        if cookie["name"] == "LEETCODE_SESSION":
-            leetcode_session = cookie["value"]
-        elif cookie["name"] == "csrftoken":
-            token = cookie["value"]
-    return [leetcode_session, token]
+    with engine.connect() as conn:
+        result = conn.execute(text(
+            "SELECT name, encrypted_value FROM cookies WHERE host_key LIKE '%leetcode.com%'"
+        ))
 
-def get_user_problems():
+        key = get_encryption_key()
+        session, csrf = None, None
+
+        for row in result:
+            name, encrypted_value = row
+            decrypted_value = decrypt_cookie(encrypted_value, key)
+
+            if name == "LEETCODE_SESSION":
+                session = decrypted_value
+            elif name == "csrftoken":
+                csrf = decrypted_value
+
+    os.remove(temp_db)  # Clean up the temporary database file
+    return [session, csrf]
+
+def get_user_problems(session, csrf):
     problems = [
         'two-sum',
         'longest-substring-without-repeating-characters',
@@ -112,12 +144,12 @@ def get_user_problems():
         'longest-common-sunsequence'
     ]
 
-    user_info = get_session_info()
-    if not user_info[0] or not user_info[1]:
-        raise ValueError("Error in accessing user's session info")
+    #user_info = get_session_info()
+    # if not user_info[0] or not user_info[1]:
+    #     raise ValueError("Error in accessing user's session info")
 
-    session = user_info[0]
-    csrf = user_info[1]
+    # session = user_info[0]
+    # csrf = user_info[1]
     configuration = leetcode.Configuration()
 
     configuration.api_key['x-csrftoken'] = csrf
