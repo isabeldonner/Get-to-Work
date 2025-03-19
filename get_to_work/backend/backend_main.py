@@ -7,7 +7,6 @@ gtw.include_router(router)
 
 user_sessions = {}
 class SessionData(user_model.User):
-    username: str
     leetcode_session: str
     token: str
 
@@ -15,17 +14,17 @@ class SessionData(user_model.User):
 async def root():
     return {"root_message": "Welcome to Get to Work!"}
 
-@gtw.post("/store_cookies")
-async def store_cookies(data: SessionData):
+@gtw.post("/store_cookies/{username}")
+async def store_cookies(data: SessionData, username: str):
     """
     Chrome:
-    1. F12/Inspect Element on leetcode.com
+    1. F12/Inspect Element on leetcode.com (logged in)
     2. Go from the Elements tab to Application
     3. Scroll down to the Storage section, open the Cookies menu in storage
     4. In Cookies, select the option for https://leetcode.com
     5. Get the values for the cookies named LEETCODE_SESSION and csrftoken
     """
-    user_sessions[data.username] = {"session": data.leetcode_session, "csrf": data.token}
+    user_sessions[username] = {"session": data.leetcode_session, "csrf": data.token}
     return {"message": "Cookies stored successfully!"}
 
 @router.get("/leetcode/progress/{username}")
