@@ -1,5 +1,5 @@
 from fastapi import FastAPI, WebSocket, APIRouter
-from leetcode_scraper import get_user_problems
+from services import leetcode_scraper
 
 gtw = FastAPI()
 router = APIRouter()
@@ -10,7 +10,7 @@ async def root():
 
 @router.get("/leetcode/progress")
 def get_leetcode_progress():
-    return get_user_problems()
+    return leetcode_scraper.get_user_problems()
 
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
