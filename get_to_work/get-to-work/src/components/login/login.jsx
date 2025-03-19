@@ -19,9 +19,9 @@ const Login = () => {
       <div className = 'inputs'>
         <div className = 'input'>
             <img src = {user_icon} className = 'icon' alt = ''/>
-            <input type = 'text' placeholder = 'Username'/> 
+            <input type = 'text' placeholder = {action === "Sign Up"?'Username': 'Username or email'}/> 
         </div>
-        <div className = 'input'>
+        <div className = {action === "Log In"?'hide': 'input'}>
             <img src = {email_icon} className = 'icon' alt = ''/>
             <input type = 'text' placeholder = 'Email'/>
         </div>
