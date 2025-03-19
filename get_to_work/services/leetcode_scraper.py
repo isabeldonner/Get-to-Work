@@ -1,15 +1,36 @@
+import selenium.common
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+import time
+import os
 import leetcode
-import browser_cookie3
 
 def get_session_info():
     leetcode_session = None
     token = None
-    cookies = browser_cookie3.chrome(domain_name='leetcode.com')
+
+    service = Service(ChromeDriverManager().install())
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(service=service, options=options)
+
+    driver.get("https://leetcode.com")
+    time.sleep(5)
+
+    cookies = driver.get_cookies()
+    print(driver.current_url)
     for cookie in cookies:
-        if cookie.name == 'LEETCODE_SESSION':
-            leetcode_session = cookie.value
-        elif cookie.name == 'csrftoken':
-            token = cookie.value
+        print(cookie)
+    driver.quit()
+    for cookie in cookies:
+        if cookie["name"] == "LEETCODE_SESSION":
+            leetcode_session = cookie["value"]
+        elif cookie["name"] == "csrftoken":
+            token = cookie["value"]
     return [leetcode_session, token]
 
 def get_user_problems():
@@ -119,3 +140,6 @@ def get_user_problems():
         if i in problems and slug_to_solved_status[i]:
             completed.append(i)
     return completed
+
+if "__main__" == __name__:
+    get_user_problems()
