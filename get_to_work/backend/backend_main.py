@@ -62,11 +62,29 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
 
 @gtw.get("/")
 async def root():
-    return {"message": "test from app root UPDATED"}
+    return {"root_message": "Welcome to Get to Work!"}
 
-@router.get("/leetcode/progress")
-async def get_leetcode_progress():
-    problems = leetcode_scraper.get_user_problems()
+@gtw.post("/store_cookies/{username}")
+async def store_cookies(data: SessionData, username: str):
+    """
+    Chrome:
+    1. F12/Inspect Element on leetcode.com (logged in)
+    2. Go from the Elements tab to Application
+    3. Scroll down to the Storage section, open the Cookies menu in storage
+    4. In Cookies, select the option for https://leetcode.com
+    5. Get the values for the cookies named LEETCODE_SESSION and csrftoken
+    """
+    user_sessions[username] = {"session": data.leetcode_session, "csrf": data.token}
+    return {"message": "Cookies stored successfully!"}
+
+@router.get("/leetcode/progress/{username}")
+async def get_leetcode_progress(username: str):
+    if username not in user_sessions:
+        raise HTTPException(status_code=404, detail="User does not have session")
+    session_data = user_sessions[username]
+    leetcode_session = session_data["leetcode_session"]
+    token = session_data["token"]
+    problems = leetcode_scraper.get_user_problems(leetcode_session, token)
     return {"problems": problems}
 
 async def websocket_endpoint(websocket: WebSocket):
