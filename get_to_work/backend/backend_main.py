@@ -1,8 +1,8 @@
 from fastapi import FastAPI, WebSocket, APIRouter, Depends, HTTPException
-#from services import leetcode_scraper
+from services import leetcode_scraper
 from sqlalchemy.orm import Session
 from database import engine, local, base, metadata
-from user_model import User
+from services.user_model import User
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -59,6 +59,12 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     if existing_user.password != user.password:
         return {"message":"incorrect password"}
     return {"message":"user logged in successfully"}
+
+user_sessions = {}
+class SessionData(User):
+    username: str
+    leetcode_session: str
+    token: str
 
 @gtw.get("/")
 async def root():

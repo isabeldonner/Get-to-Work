@@ -8,3 +8,5 @@ http://127.0.0.1:8000
 PostgreSQL edits:
 Password is gettowork!
 authuser has password authpass
+
+leetcode unofficial api: https://alfa-leetcode-api.onrender.com
