@@ -1,14 +1,27 @@
 from fastapi import FastAPI, WebSocket, APIRouter, Depends, HTTPException
-from services import leetcode_scraper
+#from services import leetcode_scraper
 from sqlalchemy.orm import Session
 from database import engine, local, base, metadata
 from services.user_model import User
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import jwt
+from datetime import datetime, timedelta
 
 gtw = FastAPI()
 router = APIRouter()
 gtw.include_router(router)
+
+secretKey = 'B%-6#-Pr-(dhu99okj7F%tgH'
+myAlgorithm = 'HS256'
+expireMin = 30
+
+#create a token to verify if a user is logged in, home can only be accessed if they have a token
+def createAccessToken(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(seconds=expireMin))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, secretKey, algorithm=myAlgorithm)
 
 gtw.add_middleware(
     CORSMiddleware,
@@ -35,7 +48,6 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str 
-    email: str 
 
 @gtw.post("/register/")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -49,17 +61,30 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return {"message":"user registered successfully"}
+    return {"message":"User registered successfully!"}
 
 @gtw.post("/login/")
 def login_user(user: UserLogin, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter((User.username == user.username) | (User.email == user.username)).first()
     if not existing_user:
-        return {"message":"no account"}
+        return {"message":"User does not exist!"}
     if existing_user.password != user.password:
-        return {"message":"incorrect password"}
-    return {"message":"user logged in successfully"}
+        return {"message":"Incorrect password!"}
+    access_token = createAccessToken(data={"sub": existing_user.username})
+    return {"message":"User logged in successfully!", "token": access_token}
 
+
+#checking whats in the database
+db = local()
+
+users = db.query(User).all()
+
+for user in users:
+    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}")
+
+db.close()
+
+'''
 user_sessions = {}
 class SessionData(User):
     username: str
@@ -97,3 +122,4 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     await websocket.send_text("Connected to WebSocket")
     await websocket.close()
+'''

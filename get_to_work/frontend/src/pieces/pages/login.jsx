@@ -1,23 +1,25 @@
 import React from 'react'
+import {useNavigate} from 'react-router-dom'
+import './register.jsx'
+import './home.jsx'
 import './login.css'
 
 import user_icon from '../assets/user.png'
 import password_icon from '../assets/locked-computer.png'
-import email_icon from '../assets/email.png'
+
 
 
 const Login = () => {
 
-    const [action, setAction] = React.useState("Sign Up");
     const [username, setUsername] = React.useState("");
-    const [email, setEmail] = React.useState("");
     const [password, setPassword] = React.useState("");
+    const navigate = useNavigate();
 
     const handleSubmit = async(event) => {
         event.preventDefault();
-        const url = action === "Sign Up" ? "http://localhost:8000/register/" : "http://localhost:8000/login/";
+        const url = "http://localhost:8000/login/";
         
-        const body = action === "Sign Up" ? {username: username, email, password} : {username, password};
+        const body = {username, password};
         try{
           const response = await fetch(url, {
             method: "POST",
@@ -28,8 +30,12 @@ const Login = () => {
           });
         
           const data = await response.json();
-      if (response.ok) {
+      if (response.ok) { 
         alert(data.message);
+        if(data.token){
+          localStorage.setItem("authToken", data.token);
+          navigate("/home");
+        }
       } else {
         alert(data.detail);
       }
@@ -43,28 +49,23 @@ const Login = () => {
     <div className = 'container'>
       <div className = 'header'>
         <div className = 'text'>Get to Work!</div>
-        <div className = 'loginsign'>{action}</div>
+        <div className = 'loginsign'>Log In</div>
       </div>
       <div className = 'inputs'>
         <div className = 'input'>
             <img src = {user_icon} className = 'icon' alt = ''/>
-            <input type = 'text' placeholder = {action === "Sign Up"?'Username': 'Username or email'} value = {username} onChange = {(e)=>setUsername(e.target.value)}/> 
-        </div>
-        <div className = {action === "Log In"?'hide': 'input'}>
-            <img src = {email_icon} className = 'icon' alt = ''/>
-            <input type = 'text' placeholder = 'Email' value = {email} onChange = {(e)=>setEmail(e.target.value)}/>
+            <input type = 'text' placeholder = 'Username or email' value = {username} onChange = {(e)=>setUsername(e.target.value)}/> 
         </div>
         <div className = 'input'>
             <img src = {password_icon} className = 'icon' alt = ''/>
-            <input type = 'text' placeholder = 'Password' value = {password} onChange = {(e)=>setPassword(e.target.value)}/> 
+            <input type = 'password' placeholder = 'Password' value = {password} onChange = {(e)=>setPassword(e.target.value)}/> 
         </div>
       </div>
         <div className = 'submit-container'>
           <form onSubmit = {handleSubmit}>
-            <button className = 'submit' type = 'submit'>{action}</button>
+            <button className = 'submit' type = 'submit'>Log In</button>
           </form>
-            <div className = {action === "Log In"?'hide': 'acct'}>Already have an account? <span className = 'existing' onClick ={()=>setAction("Log In")}>Log in</span></div>
-            <div className = {action === "Sign Up"?'hide': 'acct'}>New to Get to Work? <span className = 'existing' onClick ={()=>setAction("Sign Up")}>Create an account</span></div>
+            <div className = 'acct'>New to Get to Work? <span className = 'existing' onClick ={()=>navigate("/register")}>Create an account</span></div>
         </div>
     </div>
   ) 
