@@ -1,7 +1,7 @@
-from fastapi import FastAPI, WebSocket, APIRouter, Depends, HTTPException
+from fastapi import FastAPI, APIRouter, Depends, HTTPException
 #from services import leetcode_scraper
 from sqlalchemy.orm import Session
-from database import engine, local, base, metadata
+from services.database import engine, local, base
 from services.user_model import User
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -17,7 +17,7 @@ myAlgorithm = 'HS256'
 expireMin = 30
 
 #create a token to verify if a user is logged in, home can only be accessed if they have a token
-def createAccessToken(data: dict, expires_delta: timedelta = None):
+def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(seconds=expireMin))
     to_encode.update({"exp": expire})
@@ -70,7 +70,7 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
         return {"message":"User does not exist!"}
     if existing_user.password != user.password:
         return {"message":"Incorrect password!"}
-    access_token = createAccessToken(data={"sub": existing_user.username})
+    access_token = create_access_token(data={"sub": existing_user.username})
     return {"message":"User logged in successfully!", "token": access_token}
 
 

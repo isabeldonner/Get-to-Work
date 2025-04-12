@@ -11,6 +11,7 @@ function App() {
     <div>
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route element = {<ProtectedRoute />}>
            <Route path="/home" element={<Home />} />
