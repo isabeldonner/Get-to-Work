@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from services import leetcode_scraper
+from services.leetcode_scraper import get_user_code, get_user_completed, get_submission_id
 from sqlalchemy.orm import Session
 from services.database import engine, local, base
 from services.user_model import User
