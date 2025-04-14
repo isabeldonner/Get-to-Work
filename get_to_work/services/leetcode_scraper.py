@@ -1,12 +1,5 @@
 import leetcode
-import os
-import shutil
-import json
-import base64
-import win32crypt
-from Cryptodome.Cipher import AES
 from sqlalchemy import create_engine, text
-import leetcode.auth
 import requests
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -15,61 +8,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import time
+import browser_cookie3
 
-def get_encryption_key():
-    local_state_path = os.path.join(
-        os.getenv("APPDATA"), "..", "Local", "Google", "Chrome", "User Data", "Local State"
-    )
-
-    with open(local_state_path, "r", encoding="utf-8") as file:
-        local_state = json.loads(file.read())
-
-    encrypted_key = base64.b64decode(local_state["os_crypt"]["encrypted_key"])
-    encrypted_key = encrypted_key[5:]
-
-    return win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
-
-
-def decrypt_cookie(encrypted_cookie, key):
-    try:
-        iv = encrypted_cookie[3:15]
-        encrypted_cookie = encrypted_cookie[15:]
-        cipher = AES.new(key, AES.MODE_GCM, iv)
-        return cipher.decrypt(encrypted_cookie)[:-16].decode()
-    except:
-        return win32crypt.CryptUnprotectData(encrypted_cookie, None, None, None, 0)[1]
 
 
 def get_session_info():
-    cookies_db_path = os.path.join(
-        os.getenv("APPDATA"), "..", "Local", "Google", "Chrome", "User Data", "Default", "Network", "Cookies"
-    )
+    try:
+        cj = browser_cookie3.load(domain_name="leetcode.com")
+    except Exception as e:
+        print(f"Error loading cookies: {e}")
+        return None, None
 
-    temp_db = "temp_cookies.db"
-    shutil.copy2(cookies_db_path, temp_db)  # Copy DB to avoid lock issues
+    session, csrf = None, None
+    for cookie in cj:
+        if cookie.name == "LEETCODE_SESSION":
+            session = cookie.value
+        elif cookie.name == "csrftoken":
+            csrf = cookie.value
 
-    # Create SQLAlchemy database engine
-    engine = create_engine(f"sqlite:///{temp_db}")
+    if not session or not csrf:
+        print("Could not find required cookies. Are you logged into LeetCode in your browser?")
+        return None, None
 
-    with engine.connect() as conn:
-        result = conn.execute(text(
-            "SELECT name, encrypted_value FROM cookies WHERE host_key LIKE '%leetcode.com%'"
-        ))
-
-        key = get_encryption_key()
-        session, csrf = None, None
-
-        for row in result:
-            name, encrypted_value = row
-            decrypted_value = decrypt_cookie(encrypted_value, key)
-
-            if name == "LEETCODE_SESSION":
-                session = decrypted_value
-            elif name == "csrftoken":
-                csrf = decrypted_value
-
-    os.remove(temp_db)  # Clean up the temporary database file
-    return [session, csrf]
+    return session, csrf
 
 def get_submission_id(username, problems):
     graphql_url = "https://leetcode.com/graphql"
