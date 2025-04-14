@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-#from services import leetcode_scraper
+from services import leetcode_scraper
 from sqlalchemy.orm import Session
 from services.database import engine, local, base
 from services.user_model import User
@@ -73,6 +73,15 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": existing_user.username})
     return {"message":"User logged in successfully!", "token": access_token}
 
+@gtw.post("/update/")
+def update_user(user: UserLogin, db: Session = Depends(get_db)):
+    '''
+    1. User must be logged into the correct on LeetCode in another tab
+    2. Provide LEETCODE_SESSION and csrftoken from cookies and username into text boxes
+    3. get_user_code(session, token, username) returns a dictionary of title slugs to submitted code
+    4. This should be able to be displayed iteratively
+    '''
+    return {"message": "User updated successfully!"}
 
 #checking whats in the database
 db = local()
