@@ -1,6 +1,6 @@
 import './App.css';
 import Login from './pieces/pages/login.jsx'
-import Home from './pieces/pages/home.jsx'
+import Update from './pieces/pages/update.jsx'
 import Register from './pieces/pages/register.jsx'
 import ProtectedRoute from './pieces/components/protectedRoute.jsx';
 import { BrowserRouter, Routes, Route} from 'react-router-dom';
@@ -14,7 +14,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route element = {<ProtectedRoute />}>
-           <Route path="/home" element={<Home />} />
+           <Route path="/update" element={<Update />} />
         </Route>
         <Route path = "/register" element = {<Register />} />
       </Routes>

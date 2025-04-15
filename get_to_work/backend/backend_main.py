@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from services.leetcode_scraper import get_user_code, get_user_completed, get_submission_id
+from services.leetcode_scraper import get_user_code
 from sqlalchemy.orm import Session
 from services.database import engine, local, base
 from services.user_model import User
@@ -44,10 +44,17 @@ class UserCreate(BaseModel):
     username: str
     password: str
     email: str
+    leetcodeUser: str
 
 class UserLogin(BaseModel):
     username: str
     password: str 
+
+class UserUpdate(BaseModel):
+    username: str
+    leetcodeSesh: str
+    csrfToken: str
+
 
 @gtw.post("/register/")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -57,7 +64,10 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this username already exists")
-    new_user = User(username=user.username, password=user.password, email=user.email)
+    existing_leetcode_user = db.query(User).filter(User.leetcodeUser == user.leetcodeUser).first()
+    if existing_leetcode_user:
+        raise HTTPException(status_code=400, detail="User with this leetcode username already exists")
+    new_user = User(username=user.username, password=user.password, email=user.email, leetcodeUser=user.leetcodeUser)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -74,13 +84,15 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     return {"message":"User logged in successfully!", "token": access_token}
 
 @gtw.post("/update/")
-def update_user(user: UserLogin, db: Session = Depends(get_db)):
-    '''
-    1. User must be logged into the correct on LeetCode in another tab
-    2. Provide LEETCODE_SESSION and csrftoken from cookies and username into text boxes
-    3. get_user_code(session, token, username) returns a dictionary of title slugs to submitted code
-    4. This should be able to be displayed iteratively
-    '''
+def update_user(user: UserUpdate, db: Session = Depends(get_db)):
+    dbUser = db.query(User).filter(User.username == user.username).first()
+    try:
+        submissions = get_user_code(user.leetcodeSesh, user.csrfToken, user.username)
+        problemsCompleted = submissions.keys()
+        dbUser.completedProblems = problemsCompleted
+        db.commit()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid session or CSRF token")
     return {"message": "User updated successfully!"}
 
 #checking whats in the database
@@ -89,7 +101,7 @@ db = local()
 users = db.query(User).all()
 
 for user in users:
-    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}")
+    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}")
 
 db.close()
 
@@ -100,9 +112,6 @@ class SessionData(User):
     leetcode_session: str
     token: str
 
-@gtw.get("/")
-async def root():
-    return {"root_message": "Welcome to Get to Work!"}
 
 @gtw.post("/store_cookies/{username}")
 async def store_cookies(data: SessionData, username: str):
