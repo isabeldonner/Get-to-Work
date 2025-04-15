@@ -6,18 +6,20 @@ import './login.css'
 import user_icon from '../assets/user.png'
 import password_icon from '../assets/locked-computer.png'
 import email_icon from '../assets/email.png'
+import leetcode_icon from '../assets/leetcode.png'
 
 const Register = () => {
         const [username, setUsername] = React.useState("");
         const [email, setEmail] = React.useState("");
         const [password, setPassword] = React.useState("");
+        const [leetcodeUser, setLeetcodeUser] = React.useState("");
         const navigate = useNavigate();
     
         const handleSubmit = async(event) => {
             event.preventDefault();
             const url = "http://localhost:8000/register/";
             
-            const body = {username: username, email, password};
+            const body = {username: username, email, password, leetcodeUser};
             try{
               const response = await fetch(url, {
                 method: "POST",
@@ -58,6 +60,10 @@ const Register = () => {
             <div className = 'input'>
                 <img src = {password_icon} className = 'icon' alt = ''/>
                 <input type = 'text' placeholder = 'Password' value = {password} onChange = {(e)=>setPassword(e.target.value)}/> 
+            </div>
+            <div className = 'input'>
+                <img src = {leetcode_icon} className = 'icon' alt = ''/>
+                <input type = 'text' placeholder = 'Leetcode Username' value = {leetcodeUser} onChange = {(e)=>setLeetcodeUser(e.target.value)}/> 
             </div>
           </div>
             <div className = 'submit-container'>

@@ -1,7 +1,7 @@
 import React from 'react'
 import {useNavigate} from 'react-router-dom'
 import './register.jsx'
-import './home.jsx'
+import './update.jsx'
 import './login.css'
 
 import user_icon from '../assets/user.png'
@@ -34,7 +34,8 @@ const Login = () => {
         alert(data.message);
         if(data.token){
           localStorage.setItem("authToken", data.token);
-          navigate("/home");
+          localStorage.setItem("username", username);
+          navigate("/update");
         }
       } else {
         alert(data.detail);
