@@ -6,14 +6,14 @@ import './update.css'
 const Update = () => {
     const [leetcodeSesh, setSession] = React.useState("");
     const [csrfToken, setToken] = React.useState("");
-    const storedUsername = localStorage.getItem("username");
+    const username = localStorage.getItem("username");
     const navigate = useNavigate();
         
     const handleSubmit = async(event) => {
       event.preventDefault();
       const url = "http://localhost:8000/update/";
       
-      const body = {storedUsername, leetcodeSesh, csrfToken};
+      const body = {username, leetcodeSesh, csrfToken};
       try{
         const response = await fetch(url, {
           method: "POST",
