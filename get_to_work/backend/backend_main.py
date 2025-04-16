@@ -55,6 +55,10 @@ class UserUpdate(BaseModel):
     leetcodeSesh: str
     csrfToken: str
 
+class UserData(BaseModel):
+    username: str
+
+
 
 @gtw.post("/register/")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -92,8 +96,14 @@ def update_user(user: UserUpdate, db: Session = Depends(get_db)):
         dbUser.completedProblems = problemsCompleted
         db.commit()
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid session or CSRF token")
+        return {"message":"Invalid session or csrf token!"}
     return {"message": "User updated successfully!"}
+
+@gtw.post("/home/")
+def return_data(user: UserData, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == user.username).first()
+    return(user.completedProblems)
+    
 
 #checking whats in the database
 db = local()
