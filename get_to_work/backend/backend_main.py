@@ -106,14 +106,14 @@ def return_data(user: UserData, db: Session = Depends(get_db)):
     
 
 #checking whats in the database
-db = local()
-
-users = db.query(User).all()
-
-for user in users:
-    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}")
-
-db.close()
+# db = local()
+#
+# users = db.query(User).all()
+#
+# for user in users:
+#     print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}")
+#
+# db.close()
 
 '''
 user_sessions = {}
