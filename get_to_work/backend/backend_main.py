@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, Depends, HTTPException
-from services.leetcode_scraper import get_user_code, get_user_completed, get_submission_id
+from services.leetcode_scraper import get_user_code
 from sqlalchemy.orm import Session
 from services.database import engine, local, base
 from services.user_model import User
@@ -44,10 +44,25 @@ class UserCreate(BaseModel):
     username: str
     password: str
     email: str
+    leetcodeUser: str
 
 class UserLogin(BaseModel):
     username: str
     password: str 
+
+class UserUpdate(BaseModel):
+    username: str
+    leetcodeSesh: str
+    csrfToken: str
+
+class UserData(BaseModel):
+    username: str
+
+class AddFriend(BaseModel):
+    username: str
+    friendUsername: str
+
+
 
 @gtw.post("/register/")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -57,7 +72,10 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = db.query(User).filter(User.username == user.username).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this username already exists")
-    new_user = User(username=user.username, password=user.password, email=user.email)
+    existing_leetcode_user = db.query(User).filter(User.leetcodeUser == user.leetcodeUser).first()
+    if existing_leetcode_user:
+        raise HTTPException(status_code=400, detail="User with this leetcode username already exists")
+    new_user = User(username=user.username, password=user.password, email=user.email, leetcodeUser=user.leetcodeUser)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -74,61 +92,42 @@ def login_user(user: UserLogin, db: Session = Depends(get_db)):
     return {"message":"User logged in successfully!", "token": access_token}
 
 @gtw.post("/update/")
-def update_user(user: UserLogin, db: Session = Depends(get_db)):
-    '''
-    1. User must be logged into the correct on LeetCode in another tab
-    2. Provide LEETCODE_SESSION and csrftoken from cookies and username into text boxes
-    3. get_user_code(session, token, username) returns a dictionary of title slugs to submitted code
-    4. This should be able to be displayed iteratively
-    '''
-    return {"message": "User updated successfully!"}
+def update_user(user: UserUpdate, db: Session = Depends(get_db)):
+    dbUser = db.query(User).filter(User.username == user.username).first()
+    try:
+        submissions = get_user_code(user.leetcodeSesh, user.csrfToken, user.username)
+        problemsCompleted = submissions.keys()
+        dbUser.completedProblems = problemsCompleted
+        db.commit()
+    except Exception as e:
+        return {"message":"Invalid session or csrf token!", "cookieUpdated": False}
+    return {"message": "User updated successfully!", "cookieUpdated": True}
+
+@gtw.post("/home/")
+def return_data(user: UserData, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == user.username).first()
+    return { "completedProblems": user.completedProblems, "friendRequests": user.friendRequests}
+
+@gtw.post("/friendRequest/")
+def addFriend(user: AddFriend, db: Session = Depends(get_db)):
+    friend_user = db.query(User).filter((User.username == user.friendUsername) | (User.email == user.friendUsername)).first()
+    if not friend_user:
+        return {"message":"User does not exist!"}
+    if friend_user.friendRequests is None:
+        friend_user.friendRequests = []
+    if user.username in friend_user.friendRequests:
+        return {"message": "Friend request already sent!"}
+    friend_user.friendRequests.append(user.username)
+    db.commit()
+    return {"message":"Friend request sent!"}
 
 #checking whats in the database
+
 db = local()
 
 users = db.query(User).all()
 
 for user in users:
-    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}")
+    print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}, Completed Problems: {user.completedProblems}, Friend Requests: {user.friendRequests}")
 
 db.close()
-
-'''
-user_sessions = {}
-class SessionData(User):
-    username: str
-    leetcode_session: str
-    token: str
-
-@gtw.get("/")
-async def root():
-    return {"root_message": "Welcome to Get to Work!"}
-
-@gtw.post("/store_cookies/{username}")
-async def store_cookies(data: SessionData, username: str):
-    """
-    Chrome:
-    1. F12/Inspect Element on leetcode.com (logged in)
-    2. Go from the Elements tab to Application
-    3. Scroll down to the Storage section, open the Cookies menu in storage
-    4. In Cookies, select the option for https://leetcode.com
-    5. Get the values for the cookies named LEETCODE_SESSION and csrftoken
-    """
-    user_sessions[username] = {"session": data.leetcode_session, "csrf": data.token}
-    return {"message": "Cookies stored successfully!"}
-
-@router.get("/leetcode/progress/{username}")
-async def get_leetcode_progress(username: str):
-    if username not in user_sessions:
-        raise HTTPException(status_code=404, detail="User does not have session")
-    session_data = user_sessions[username]
-    leetcode_session = session_data["leetcode_session"]
-    token = session_data["token"]
-    problems = leetcode_scraper.get_user_problems(leetcode_session, token)
-    return {"problems": problems}
-
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    await websocket.send_text("Connected to WebSocket")
-    await websocket.close()
-'''
