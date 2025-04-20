@@ -132,7 +132,7 @@ def addFriend(user: AddFriend, db: Session = Depends(get_db)):
     return {"message":"Friend request sent!"}
 
 #checking whats in the database
-
+'''
 db = local()
 
 users = db.query(User).all()
@@ -141,3 +141,5 @@ for user in users:
     print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}, Completed Problems: {user.completedProblems}, Friend Requests: {user.friendRequests}, friends: {user.friends}, User Stats: {user.userStats}")
 
 db.close()
+
+'''
