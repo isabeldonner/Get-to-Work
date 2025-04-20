@@ -1,4 +1,5 @@
 import React from 'react'
+import Collapsible from 'react-collapsible';
 import './home.css'
 
 
@@ -23,6 +24,7 @@ const Home = () => {
         });
 
         const data = await response.json();
+        console.log("Fetched User Data:", data);
         setUserData(data);
       } catch (error) {
         console.error("Failed to fetch user info", error);
@@ -62,14 +64,34 @@ const Home = () => {
     
 
   return (
-    <div>
+    <div className = "body">
     <h1 className = "welcome">Welcome, {username}!</h1>
     <div className="completed-container">
       <div className = "titles">Your Completed Problems:</div>
-      <ul style={{ listStyleType: "square"}}>
-        {userData.completedProblems?.map((problem, idx) => (
-          <li key={idx} className = "problems">{problem}</li>
-        ))}
+      <ul style={{ listStyleType: "none"}}>
+        {Object.entries(userData.completedProblems).map(([problemName, code], idx) => {
+          const stats = userData.stats?.[problemName];
+          console.log(stats);
+          return(
+          <li key={idx} className = "problems">
+            <Collapsible trigger={problemName}>
+              <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word", fontSize: "11px" }}>
+                {code}
+              </pre>
+              {stats ? (
+          <div className="stats">
+            <div><strong>Runtime:</strong> {stats.runtime}</div>
+            <div><strong>Memory Usage:</strong> {stats.memory_usage}</div>
+            <div><strong>Runtime Percentile:</strong> {stats.runtime_percentile}</div>
+            <div><strong>Memory Percentile:</strong> {stats.memory_percentile}</div>
+          </div>
+        ) : (
+          <div className = "stats">No stats available</div> 
+        )}
+            </Collapsible>
+          </li>
+          );
+    })}
       </ul>
     </div>
 

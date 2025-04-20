@@ -88,7 +88,10 @@ def get_submission_code(submission_url, session_cookie, csrf_token):
             "domain": ".leetcode.com",
             "secure": True
         })
+        time.sleep(1)
         driver.get(submission_url)
+        time.sleep(2)
+        #print(driver.page_source)
 
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-track-load='code_editor']"))
@@ -217,6 +220,7 @@ def get_submission_statistics(submission_url, session_cookie, csrf_token):
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     driver = webdriver.Chrome(options=chrome_options)
+    
 
     try:
         driver.get("https://leetcode.com/")
@@ -235,11 +239,13 @@ def get_submission_statistics(submission_url, session_cookie, csrf_token):
             "domain": ".leetcode.com",
             "secure": True
         })
+        time.sleep(1)
         driver.get(submission_url)
 
         WebDriverWait(driver, 15).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-track-load='code_editor']"))
         )
+        time.sleep(2)
 
         elements = driver.find_elements(By.TAG_NAME, "DIV")
         if not elements:
@@ -250,6 +256,7 @@ def get_submission_statistics(submission_url, session_cookie, csrf_token):
                 text = element.get_attribute("textContent")
                 runtime_info = re.search(R"SolutionRuntime(\d+ms).*?Beats([\d.]+%)", text)
                 memory_info = re.search(R"ComplexityMemory([\d.]+MB).*?Beats([\d.]+%)", text)
+                time.sleep(1)
                 if not runtime_info or not memory_info:
                     raise Exception("Runtime and memory info not found")
                 else:
@@ -285,4 +292,6 @@ def get_user_code(session, token, username):
         code = get_submission_code(url, session, token)
         submissions[problem] = code
 
+    print("Submission IDs:", submission_ids)
+    print("Completed:", completed)
     return submissions
