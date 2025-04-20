@@ -10,5 +10,6 @@ class User(base):
     password = Column(String)
     leetcodeUser = Column(String, unique=True, index=True) 
     completedProblems = Column(ARRAY(String))
+    friendRequests = Column(ARRAY(String))
     # LeetCode password
     # link to leaderboard object somehow
