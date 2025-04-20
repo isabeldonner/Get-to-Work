@@ -1,5 +1,6 @@
 
 pip install fastapi uvicorn sqlalchemy psycopg2 alembic celery redis selenium
+also needs pip install python-leetcode and pip install browser-cookie3
 
 fastapi - web framework
 uvicorn - FastAPI ASGI server
