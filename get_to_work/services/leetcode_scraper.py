@@ -9,6 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import time
 import browser_cookie3
+import re
 
 
 
@@ -209,6 +210,61 @@ def get_user_completed(instance):
         if i in problems and slug_to_solved_status[i]:
             completed.append(i)
     return completed
+
+def get_submission_statistics(submission_url, session_cookie, csrf_token):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    driver = webdriver.Chrome(options=chrome_options)
+
+    try:
+        driver.get("https://leetcode.com/")
+        time.sleep(1)
+
+        # Set cookies for the domain
+        driver.add_cookie({
+            "name": "LEETCODE_SESSION",
+            "value": session_cookie,
+            "domain": ".leetcode.com",
+            "secure": True
+        })
+        driver.add_cookie({
+            "name": "csrftoken",
+            "value": csrf_token,
+            "domain": ".leetcode.com",
+            "secure": True
+        })
+        driver.get(submission_url)
+
+        WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[data-track-load='code_editor']"))
+        )
+
+        elements = driver.find_elements(By.TAG_NAME, "DIV")
+        if not elements:
+            print("No solution element found")
+            return None
+        else:
+            for element in elements:
+                text = element.get_attribute("textContent")
+                runtime_info = re.search(R"SolutionRuntime(\d+ms).*?Beats([\d.]+%)", text)
+                memory_info = re.search(R"ComplexityMemory([\d.]+MB).*?Beats([\d.]+%)", text)
+                if not runtime_info or not memory_info:
+                    raise Exception("Runtime and memory info not found")
+                else:
+                    stats = {
+                        'runtime': runtime_info.group(1),
+                        'runtime_percentile': runtime_info.group(2),
+                        'memory_usage': memory_info.group(1),
+                        'memory_percentile': memory_info.group(2),
+                    }
+                    return stats
+    except Exception as e:
+        print(f"Scraping error: {str(e)}")
+        return None
+    finally:
+        driver.quit()
 
 def get_user_code(session, token, username):
     submissions = {}

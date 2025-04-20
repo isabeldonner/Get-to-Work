@@ -122,6 +122,7 @@ def addFriend(user: AddFriend, db: Session = Depends(get_db)):
     return {"message":"Friend request sent!"}
 
 #checking whats in the database
+
 db = local()
 
 users = db.query(User).all()
