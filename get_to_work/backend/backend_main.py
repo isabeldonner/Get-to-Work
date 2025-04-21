@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from services.database import engine, local, base
 from services.user_model import User
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 import jwt
 from datetime import datetime, timedelta
 
@@ -49,7 +49,7 @@ base.metadata.create_all(bind=engine)
 class UserCreate(BaseModel):
     username: str 
     password: str 
-    email: str
+    email: EmailStr
     leetcodeUser: str
 
 class UserLogin(BaseModel):
