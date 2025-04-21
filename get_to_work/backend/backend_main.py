@@ -16,6 +16,12 @@ secretKey = 'B%-6#-Pr-(dhu99okj7F%tgH'
 myAlgorithm = 'HS256'
 expireMin = 30
 
+#username and password length validation
+min_pass_length = 8
+min_username_length = 4
+max_pass_length = 30
+max_username_length = 30
+
 #create a token to verify if a user is logged in, home can only be accessed if they have a token
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
@@ -41,8 +47,8 @@ def get_db():
 base.metadata.create_all(bind=engine)
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str 
+    password: str 
     email: str
     leetcodeUser: str
 
@@ -66,6 +72,10 @@ class AddFriend(BaseModel):
 
 @gtw.post("/register/")
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    if len(user.username) < min_username_length or len(user.username) > max_username_length:
+        raise HTTPException(status_code=400, detail="Username must be between 4 and 30 characters")
+    if len(user.password) < min_pass_length or len(user.password) > max_pass_length:
+        raise HTTPException(status_code=400, detail="Password must be between 8 and 30 characters")
     existing_email = db.query(User).filter(User.email == user.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="User with this email already exists")
@@ -141,3 +151,4 @@ for user in users:
     print(f"ID: {user.id}, Username: {user.username}, Email: {user.email}, Password: {user.password}, LeetCode User: {user.leetcodeUser}, Completed Problems: {user.completedProblems}, Friend Requests: {user.friendRequests}, friends: {user.friends}, User Stats: {user.userStats}")
 
 db.close()
+
