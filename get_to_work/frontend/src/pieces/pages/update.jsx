@@ -26,7 +26,6 @@ const Update = () => {
         const data = await response.json();
     if (response.ok) { 
       alert(data.message);
-      localStorage.setItem("cookieUpdated", true);
       navigate("/home");
     } else {
       alert(data.detail);
