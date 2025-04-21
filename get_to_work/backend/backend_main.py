@@ -152,3 +152,17 @@ for user in users:
 
 db.close()
 
+"""
+^ this code for printing the database threw some errors on certain servers when running the frontend.
+I solved the issue by commenting it out
+On my end, I was able to print the database simply by running:
+
+psql -d get_to_work -U postgres 
+^ in the virtual environment to connect to the database
+
+then 
+
+\d users
+
+to print the "users" table
+"""
