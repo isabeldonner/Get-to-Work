@@ -1,4 +1,1 @@
-Repository for Intro to Software Engineering Final Project Spring 2025
-
-
-
+CEN 3031 - 20255 - Group 8 - Pryce Houck, Isabel Donner, Sofia Cruz
