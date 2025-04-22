@@ -3,6 +3,8 @@ from services.database import base
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableDict
 
+# defines user model for storing user information in the database
+
 class User(base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -16,3 +18,7 @@ class User(base):
     userStats = Column(MutableDict.as_mutable(JSON), default = dict)
     # LeetCode password
     # link to leaderboard object somehow
+
+
+
+
