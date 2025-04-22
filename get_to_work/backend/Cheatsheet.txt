@@ -1,6 +1,9 @@
 Activate virtual environment from (get_to_work):
 venv\Scripts\activate
 
+for Mac virtual environment activation command is:
+source venv/bin/acivate
+
 Start backend server: (Ctrl + C to shut it down)
 uvicorn backend.backend_main:gtw --reload
 http://127.0.0.1:8000
@@ -10,3 +13,7 @@ Password is gettowork!
 authuser has password authpass
 
 leetcode unofficial api: https://alfa-leetcode-api.onrender.com
+
+
+
+

@@ -1,0 +1,29 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Explicitly declare text files you want to always normalize
+*.py text
+*.html text
+*.css text
+*.js text
+*.json text
+*.md text
+*.txt text
+*.ini text
+*.cfg text
+
+# Declare files that will always have CRLF line endings on checkout
+# *.bat text eol=crlf
+
+# Declare files that should not be normalized
+# *.png binary
+# *.jpg binary
+
+
+
+
+
+
+
+
+

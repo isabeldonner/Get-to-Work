@@ -12,3 +12,8 @@ alembic - database migration
 celery - async backend tasks
 redis - Celery's message broker
 selenium - web scraping/LeetCode (tentative)
+
+
+
+
+
